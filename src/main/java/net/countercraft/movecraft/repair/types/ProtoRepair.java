@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.DoubleChestInventory;
@@ -131,7 +132,7 @@ public class ProtoRepair {
             if (!(state instanceof Container))
                 throw new ItemRemovalException();
 
-            removeInventory(((Container) state).getInventory(), entry.getValue());
+            removeInventory(getBlockInventory((Container) state), entry.getValue());
         }
 
         // Take money
@@ -156,7 +157,7 @@ public class ProtoRepair {
             if (!(state instanceof Container))
                 continue;
 
-            Counter<Material> contents = sumInventory(((Container) state).getInventory());
+            Counter<Material> contents = sumInventory(getBlockInventory((Container) state));
             Counter<Material> toRemove = new Counter<>();
             for (Material m : contents.getKeySet()) {
                 RepairBlob blob = RepairBlobManager.get(m);
@@ -178,6 +179,20 @@ public class ProtoRepair {
             itemsToRemove.put(location, toRemove);
         }
         return new Pair<>(remaining, itemsToRemove);
+    }
+
+    /**
+     * Gets the inventory of a container block.
+     * If the block is one half of a double chest, the returned inventory contains only the items stored in that half of the chest.
+     *
+     * @param container container block
+     * @return inventory
+     */
+    @NotNull
+    private Inventory getBlockInventory(@NotNull Container container) {
+        if (container instanceof Chest)
+            return ((Chest) container).getBlockInventory();
+        return container.getInventory();
     }
 
     @NotNull
